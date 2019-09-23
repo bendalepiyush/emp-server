@@ -1,5 +1,7 @@
-if(process.env.MONGO_URI){
+if( process.env.MONGO_URI )
+
     module.exports = process.env.MONGO_URI;
-}else{
+
+else
+
     module.exports = "mongodb://admin:9158674554p@ds129536.mlab.com:29536/emp-attend";
-}

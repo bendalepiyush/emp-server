@@ -23,10 +23,11 @@ const employeeSchema =
             required: true
         },
 
-        profile: {
-            type: Object,
-            required: true
-        }
+        atterndaceLog: [{
+            date: Date,
+            inTime: Date,
+            outTime: Date
+        }]
 
     },
     {

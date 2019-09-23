@@ -86,5 +86,44 @@ router.post('/totalEmployees', checkSupAuth, (req, res) => {
 		    res.json(count);
 	});
 });
+/*
+router.post('/markPresent', checkSupAuth, (req, res) => {
+
+    let profileId = req.body.profileId;
+    let type = req.body.type;
+
+    EmployeeModel
+        .findOne({ profileId : profileId })
+        .exec( (err, employee) => {
+
+            if ( err )
+
+                res.json({
+                    err: err
+                });
+            
+            else {
+
+                employee
+                    .updateOne()
+                    .exec( (err, result) => {
+
+                        if ( err )
+                            res.json({
+                                err: err
+                            });
+                        
+                        else {
+
+                        }
+
+
+                    });
+
+            }
+
+        });
+});
+*/
 
 module.exports = router;
