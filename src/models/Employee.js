@@ -1,6 +1,25 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const attendaceLogSchema = 
+    new Schema({
+        date: {
+            type: String,
+            required: true,
+            unique: true
+        },
+
+        inTime: {
+            type: String,
+            required: true
+        },
+
+        outTime: {
+            type: String
+        }
+
+    });
+
 const employeeSchema = 
     new Schema({
         profileId: {
@@ -23,11 +42,7 @@ const employeeSchema =
             required: true
         },
 
-        atterndaceLog: [{
-            date: Date,
-            inTime: Date,
-            outTime: Date
-        }]
+        attendaceLog: [attendaceLogSchema]
 
     },
     {
@@ -35,4 +50,5 @@ const employeeSchema =
     });
 
 
+mongoose.model('attendaceLogSchema', attendaceLogSchema);
 module.exports = mongoose.model('Employee', employeeSchema);

@@ -86,44 +86,100 @@ router.post('/totalEmployees', checkSupAuth, (req, res) => {
 		    res.json(count);
 	});
 });
-/*
-router.post('/markPresent', checkSupAuth, (req, res) => {
+
+router.post('/markPresent', (req, res) => {
 
     let profileId = req.body.profileId;
     let type = req.body.type;
+    let currentDateTime = new Date;
+    let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
+    let currentTime = currentDateTime.getHours() + ':' + currentDateTime.getMinutes();
 
-    EmployeeModel
-        .findOne({ profileId : profileId })
-        .exec( (err, employee) => {
+    
+    if( type === 'in' ) {
+        let newAttendanceLog = {
+            date: currentDate,
+            inTime: currentTime,
+            outTime: null
+        };
 
-            if ( err )
+        EmployeeModel
+            .findOne({ profileId : profileId })
+            .exec( (err, employee) => {
 
-                res.json({
-                    err: err
-                });
-            
-            else {
+                if ( employee.attendaceLog.length <= 0 ) {
+                    employee.attendaceLog.push(newAttendanceLog);
 
-                employee
-                    .updateOne()
-                    .exec( (err, result) => {
+                    employee.save();
+                    res.json({
+                        message: "InTime added successfully"
+                    });
+                } else {
+                    
+                    if ( employee.attendaceLog[employee.attendaceLog.length - 1].date === currentDate )
+                        res.json({
+                            message: "InTime already present"
+                        });  
+                    else {
 
-                        if ( err )
+                        employee.attendaceLog.push(newAttendanceLog);
+
+                        employee.save();
+                        res.json({
+                            message: "InTime added successfully"
+                        });
+
+                    }
+
+                }
+                
+            });
+
+
+    } else {
+        
+
+        EmployeeModel
+            .findOne({ profileId : profileId })
+            .exec( (err, employee) => {
+
+                if (err)
+                    res.json({ err : err });
+
+                else if ( employee.attendaceLog.length <= 0 )
+                    res.json({ err : "InTime not present" });
+
+                else {
+                    if ( employee.attendaceLog[employee.attendaceLog.length - 1].date !== currentDate )
+                        res.json({ err : "InTime not present" });
+
+                    else {
+
+                        if ( employee.attendaceLog[employee.attendaceLog.length - 1].outTime )
                             res.json({
-                                err: err
+                                err: "OutTime already present" 
                             });
                         
                         else {
+                            
+                            employee.attendaceLog[employee.attendaceLog.length - 1].outTime = currentTime;
+
+                            employee.save();
+                            res.json({
+                                message: "OutTime added successfully"
+                            });
 
                         }
+                                                
+                    }                    
+                }
 
+            });
+    
+    }
 
-                    });
-
-            }
-
-        });
+    
 });
-*/
+
 
 module.exports = router;
