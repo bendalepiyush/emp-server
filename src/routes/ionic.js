@@ -66,6 +66,10 @@ router.post('/auth', (req, res) => {
 });
 
 router.post('/', (req, res) => {
+
+    let currentDateTime = new Date;
+    let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
+
     
     EmployeeModel
         .countDocuments()
@@ -73,11 +77,9 @@ router.post('/', (req, res) => {
 
             if(err)
                 res.json(err);
-
-            else
-                let currentDateTime = new Date;
-                let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
                 
+            else
+
                 EmployeeModel
                     .countDocuments({ 'attendaceLog.date' : currentDate })
                     .exec( (err, countPresent) => { 
