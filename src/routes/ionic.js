@@ -66,34 +66,34 @@ router.post('/auth', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-
-    let obj = {};
-
-    let currentDateTime = new Date;
-    let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
-
-    EmployeeModel
-        .countDocuments({ 'attendaceLog.date' : currentDate })
-        .exec( (err, count) => { 
-
-            if(err)
-                console.log(err);
-            else
-                obj.allPresentEmployees = count;
-
-        });
-
-
+    
     EmployeeModel
         .countDocuments()
         .exec((err, count) => {
+
             if(err)
-                console.log(err);
+                res.json(err);
+
             else
-                obj.totalEmployees = count;
+                let currentDateTime = new Date;
+                let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
+                
+                EmployeeModel
+                    .countDocuments({ 'attendaceLog.date' : currentDate })
+                    .exec( (err, countPresent) => { 
+            
+                        if(err)
+                            res.json(err);
+
+                        else
+                            res.json({
+                                allPresentEmployees : countPresent,
+                                totalEmployees : count
+                            });  
+
+                    });
         });
 
-    res.json(obj);
     
 });
 
