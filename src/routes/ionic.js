@@ -65,6 +65,39 @@ router.post('/auth', (req, res) => {
 
 });
 
+router.post('/', (req, res) => {
+
+    let obj = {};
+
+    let currentDateTime = new Date;
+    let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
+
+    EmployeeModel
+        .countDocuments({ 'attendaceLog.date' : currentDate })
+        .exec( (err, count) => { 
+
+            if(err)
+                console.log(err);
+            else
+                obj.allPresentEmployees = count;
+
+        });
+
+
+    EmployeeModel
+        .countDocuments()
+        .exec((err, count) => {
+            if(err)
+                console.log(err);
+            else
+                obj.totalEmployees = count;
+        });
+
+    res.json(obj);
+    
+});
+
+
 router.post('/allemployees', checkSupAuth, (req, res) => {
     EmployeeModel
         .find()
@@ -78,7 +111,7 @@ router.post('/allemployees', checkSupAuth, (req, res) => {
 
 router.post('/totalEmployees', checkSupAuth, (req, res) => {
     EmployeeModel
-        .count()
+        .countDocuments()
         .exec((err, count) => {
             if(err)
                 res.json(err);
@@ -86,6 +119,7 @@ router.post('/totalEmployees', checkSupAuth, (req, res) => {
                 res.json(count);
         });
 });
+
 
 router.post('/allPresentEmployees', checkSupAuth, (req, res) => {
     let currentDateTime = new Date;
