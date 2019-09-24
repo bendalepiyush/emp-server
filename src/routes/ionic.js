@@ -78,16 +78,32 @@ router.post('/allemployees', checkSupAuth, (req, res) => {
 
 router.post('/totalEmployees', checkSupAuth, (req, res) => {
     EmployeeModel
-	.count()
-	.exec((err, count) => {
-	    if(err)
-		    res.json(err);
-	    else
-		    res.json(count);
-	});
+        .count()
+        .exec((err, count) => {
+            if(err)
+                res.json(err);
+            else
+                res.json(count);
+        });
 });
 
-router.post('/markPresent', (req, res) => {
+router.post('/allPresentEmployees', checkSupAuth, (req, res) => {
+    let currentDateTime = new Date;
+    let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
+    EmployeeModel
+        .find({ 'attendaceLog.date' : currentDate })
+        .exec( (err, employees) => { 
+
+            if (err)
+                res.json(err);
+            else
+                if ( employees ) 
+                res.json(employees);
+
+        });
+});
+
+router.post('/markPresent', checkSupAuth, (req, res) => {
 
     let profileId = req.body.profileId;
     let type = req.body.type;
@@ -115,7 +131,7 @@ router.post('/markPresent', (req, res) => {
                         message: "InTime added successfully"
                     });
                 } else {
-                    
+
                     if ( employee.attendaceLog[employee.attendaceLog.length - 1].date === currentDate )
                         res.json({
                             message: "InTime already present"
