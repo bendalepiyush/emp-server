@@ -75,9 +75,10 @@ router.post('/employee/register', (req, res, next) => {
                         if (err)
                             res.json(err);
 
-                        res.json({
-                            profileId: profileId
-                        });
+                        else
+                            res.json({
+                                profileId: profileId
+                            });                        
 
                 });
 

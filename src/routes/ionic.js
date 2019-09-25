@@ -15,8 +15,14 @@ router.post('/auth', (req, res) => {
     SupervisorModel
         .findOne({ email : email })
         .exec( (err, supervisor) => {
+
             if (err)
                 res.json(err);
+
+            else if( supervisor === null )
+                res.json({
+                    err : "No supervisor found"
+                });
 
             else {
 
@@ -65,7 +71,7 @@ router.post('/auth', (req, res) => {
 
 });
 
-router.post('/', (req, res) => {
+router.post('/', checkSupAuth, (req, res) => {
 
     let currentDateTime = new Date;
     let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
