@@ -10,8 +10,7 @@ const morgan = require('morgan');
 let mongoose = require('./src/services/mongo-connection');
 mongoose();
 
-const indexRouter = require('./src/routes/index');
-const ionicRouter = require('./src/routes/ionic');
+
 const app = express();
 
 app.use(morgan('dev'));
@@ -34,7 +33,16 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use('/', indexRouter);
-app.use('/ionic/', ionicRouter);
+
+/**
+ * Routers
+ */
+const adminRouter = require('./src/routes/react/admin');
+const customerRouter = require('./src/routes/react/customer');
+//const ionicRouter = require('./src/routes/ionic');
+
+app.use('/admin', adminRouter);
+app.use('/customer', customerRouter);
+//app.use('/ionic/', ionicRouter);
 
 module.exports = app;

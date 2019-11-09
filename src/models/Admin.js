@@ -1,22 +1,18 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const supervisorSchema = 
-    new Schema({
 
+const adminSchema = 
+    new Schema({
         fullName: {
             type: String,
-            required: true,
+            required: true
         },
 
         email: {
             type: String,
-            required: true
-        },
-
-        mobileNo: {
-            type: String,
-            required: true
+            required: true,
+            unique: true
         },
 
         password: {
@@ -29,5 +25,4 @@ const supervisorSchema =
         strict: true
     });
 
-
-module.exports = mongoose.model('Supervisor', supervisorSchema);
+module.exports = mongoose.model('Admin', adminSchema);
