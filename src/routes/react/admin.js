@@ -184,6 +184,7 @@ router.post('/addCustomer', (req, res) => {
                             ratePerWorkerPerMonth: req.body.ratePerWorkerPerMonth,
                             customerId: customerId,
                             companyAdmins: [{
+                                profileId : customerId * 10000 + 1,
                                 email : req.body.ownerEmail,
                                 fullName : ownerFullName,
                                 mobileNo : req.body.ownerMobileNo,

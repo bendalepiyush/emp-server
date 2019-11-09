@@ -10,11 +10,13 @@ const checkAuth = require('../../services/check-auth');
 
 // @TODO Replace customerId static to dynamic
 router.post('/admin/auth', (req, res) =>{
-    let email = req.body.email;
+    let profileId = req.body.profileId;
     let password = req.body.password;
 
+    let customerId = Math.floor(profileId / 10000); 
+
     CustomerModel
-        .findOne({ customerId : 1 })
+        .findOne({ customerId : customerId })
         .exec( (err, customer) => {
 
             if (err)
@@ -30,7 +32,7 @@ router.post('/admin/auth', (req, res) =>{
             else {
 
                 for(var i=0; i<customer.companyAdmins.length; i++){
-                    if(customer.companyAdmins[i].email === email){
+                    if(customer.companyAdmins[i].profileId === profileId){
                         console.log(customer.companyAdmins[i]);
 
                         bcrypt.compare( password, customer.companyAdmins[i].password, (err, result) => {
@@ -43,8 +45,9 @@ router.post('/admin/auth', (req, res) =>{
                                 if (result) {
                                     
                                     jwt.sign({
-                                        email: email,
-                                        type: "CustomerAdmin"
+                                        profileId: profileId,
+                                        type: "CustomerAdmin",
+                                        customerId: customerId
                                         }, 
                                         jwtKey, 
                                         {
@@ -52,8 +55,7 @@ router.post('/admin/auth', (req, res) =>{
                                         }, 
                                         (err, token) => {
                                             if (err)
-                                                //res.json(err);
-                                                console.log("ez");
+                                                res.json(err);
                                             else {
                                                 res.json({
                                                     token : token,
@@ -88,7 +90,7 @@ router.post('/admins', checkAuth, (req, res) => {
     if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
 
         CustomerModel
-        .findOne({ customerId : 1 })
+        .findOne({ customerId : req.jwtData.customerId })
         .exec( (err, customer) => {
 
             if (err)
@@ -120,7 +122,7 @@ router.post('/supervisors', checkAuth, (req, res) => {
     if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
 
         CustomerModel
-        .findOne({ customerId : 1 })
+        .findOne({ customerId : req.jwtData.customerId })
         .exec( (err, customer) => {
 
             if (err)
@@ -147,6 +149,39 @@ router.post('/supervisors', checkAuth, (req, res) => {
     
 });
 
+router.post('/workers', checkAuth, (req, res) => {
+
+    if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
+
+        CustomerModel
+        .findOne({ customerId : req.jwtData.customerId })
+        .exec( (err, customer) => {
+
+            if (err)
+                res.json({
+                    err: err
+                });
+
+            else if(customer === null) 
+                res.json({
+                    err: "Something went wrong"
+                });
+            
+            else {
+                res.json(customer.workers);
+            }
+        });
+
+    } else {
+        res.status(401).json({
+            message: 'Forbidden',
+            status: 403
+        });
+    }
+    
+});
+
+
 
 router.post('/supervisor/register', checkAuth, (req, res) => {
 
@@ -158,50 +193,89 @@ router.post('/supervisor/register', checkAuth, (req, res) => {
             res.json( err );
 
         else {  
-            
-            let fullName = req.body.firstname + ' ' + req.body.lastname;
-
-            let supervisor = {
-                email : req.body.email,
-                fullName : fullName,
-                mobileNo : req.body.mobileNo,
-                password : hashedPassword
-            };
 
             CustomerModel
-                .findOneAndUpdate(
-                    { email: req.jwtData.email },
-                    { $push: { supervisors: supervisor  }},
+            .findOne({ customerId : req.jwtData.customerId })
+            .exec( (err, customer) => {
 
-                    (err, success) => {
-                        if( err )
+                if (err)
+                    res.json({
+                        err: err
+                    });
 
-                            res.json({
-                                err: err
-                            });
+                else if(customer === null) 
+                    res.json({
+                        err: "Something went wrong"
+                    });
+                
+                else {
 
-                        else{
+                    let profileId;
+                    // Calculate Profile ID
+                    if(customer.supervisors.length === 0)
+                        profileId = (req.jwtData.customerId * 10000) + 1;
+                             
+                    else
+                        profileId = customer.supervisors[customer.supervisors.length - 1].profileId + 1;
+                        
+                        
+                    // Save new supervisor
+                    let fullName = req.body.firstname + ' ' + req.body.lastname;
 
-                            let mailOptions = {
-                                from: 'test@thetechnolover.com',
-                                to: 'thetechnolover7@gmail.com',
-                                subject: 'test ',
-                                text: password,
-                                html: password
-                            };
-                            
-                            transporter.sendMail(mailOptions, function(err, info){
-                                if(err)
-                                    res.json({err: err});
-                                else
-                                    res.json(supervisor);
-                            
-                            });    
+                    let supervisor = {
+                        profileId: profileId,
+                        email : req.body.email,
+                        fullName : fullName,
+                        mobileNo : req.body.mobileNo,
+                        password : hashedPassword
+                    };
 
-                        }
-                            
-                    }
-                );
+                    CustomerModel
+                        .findOne({ customerId : req.jwtData.customerId })
+                        .exec((err, customer) => {
+
+                                if( err )
+                                    res.json({
+                                        err: err
+                                    });
+
+                                else{
+
+                                    customer.supervisors.push(supervisor);
+                                    customer.save((err)=> {
+                                        if(err)
+                                            res.json();
+
+                                        else{
+                                            let mailOptions = {
+                                                from: 'test@thetechnolover.com',
+                                                to: 'thetechnolover7@gmail.com',
+                                                subject: 'test ',
+                                                text: password,
+                                                html: password
+                                            };
+                                            
+                                            transporter.sendMail(mailOptions, function(err, info){
+                                                if(err)
+                                                    res.json({err: err});
+                                                else
+                                                    res.json(supervisor);
+                                            
+                                            });  
+                                        }
+
+                                    }); 
+
+                                }
+                                    
+                            }
+                        );                  
+                
+                    
+                }
+
+            });        
+            
 
 
         }

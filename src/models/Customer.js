@@ -69,6 +69,12 @@ const workerSchema =
 const stakeholderSchema = 
     new Schema({
 
+        profileId: {
+            type: Number,
+            unique: true,
+            required: true
+        },
+
         fullName: {
             type: String,
             required: true
