@@ -83,6 +83,8 @@ router.post('/auth', (req, res) => {
                             }
         
                         });
+                        
+                        break;
         
                     }
                 }
@@ -158,6 +160,7 @@ router.post('/markPresent', checkAuth, (req, res) => {
                         err: "No worker present"
                     });
                     
+
                 if ( employee.attendaceLog.length <= 0 ) {
                     employee.attendaceLog.push(newAttendanceLog);
 

@@ -89,6 +89,8 @@ router.post('/admin/auth', (req, res) =>{
                             }
         
                         });
+
+                        break;
         
                     }
                 }
@@ -390,10 +392,6 @@ router.post('/worker/register', checkAuth, (req, res) => {
         });        
             
     });
-
-
-
-
 
 
 
