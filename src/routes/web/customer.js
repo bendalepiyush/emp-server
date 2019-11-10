@@ -1,14 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+
+
+/**
+ * JWT Token
+ */
 const jwt = require('jsonwebtoken');
 const jwtKey = require('../../../config/jwt');
-let CustomerModel = require("../../models/Customer");
-let transporter = require("../../services/smtp-server");
-
 const checkAuth = require('../../services/check-auth');
 
-// @TODO Replace customerId static to dynamic
+
+/**
+ * Mongoose Models
+ */
+let CustomerModel = require("../../models/Customer");
+
+
+
+/**
+ * Email and SMS Service
+ */
+let transporter = require("../../services/smtp-server");
+
+
 router.post('/admin/auth', (req, res) =>{
     let profileId = req.body.profileId;
     let password = req.body.password;
@@ -33,7 +48,6 @@ router.post('/admin/auth', (req, res) =>{
 
                 for(var i=0; i<customer.companyAdmins.length; i++){
                     if(customer.companyAdmins[i].profileId === profileId){
-                        console.log(customer.companyAdmins[i]);
 
                         bcrypt.compare( password, customer.companyAdmins[i].password, (err, result) => {
 
@@ -247,21 +261,25 @@ router.post('/supervisor/register', checkAuth, (req, res) => {
                                             res.json();
 
                                         else{
+
                                             let mailOptions = {
                                                 from: 'test@thetechnolover.com',
-                                                to: 'thetechnolover7@gmail.com',
+                                                to: req.body.email,
                                                 subject: 'test ',
-                                                text: password,
+                                                text: "Profile ID - " + profileId + "\n" + password,
                                                 html: password
                                             };
                                             
-                                            transporter.sendMail(mailOptions, function(err, info){
+                                            transporter.sendMail(mailOptions, (err, info) => {
+
                                                 if(err)
                                                     res.json({err: err});
                                                 else
                                                     res.json(supervisor);
+
                                             
                                             });  
+
                                         }
 
                                     }); 
@@ -283,6 +301,97 @@ router.post('/supervisor/register', checkAuth, (req, res) => {
     });
 
 });
+
+
+
+router.post('/worker/register', checkAuth, (req, res) => {
+
+    CustomerModel
+        .findOne({ customerId : req.jwtData.customerId })
+        .exec( (err, customer) => {
+
+            if (err)
+                res.json({
+                    err: err
+                });
+
+            else if(customer === null) 
+                res.json({
+                    err: "Something went wrong"
+                });
+                
+            else {
+
+                let profileId;
+
+                // Calculate Profile ID
+                if(customer.supervisors.length === 0)
+                    profileId = (req.jwtData.customerId * 10000) + 1;
+                             
+                else
+                    profileId = customer.workers[customer.workers.length - 1].profileId + 1;
+                
+                    
+                // Save new supervisor
+                let fullName = req.body.firstname + ' ' + req.body.lastname;
+
+                let worker = {
+                    profileId: profileId,
+                    email : req.body.email,
+                    fullName : fullName,
+                    mobileNo : req.body.mobileNo
+                };
+
+                CustomerModel
+                    .findOne({ customerId : req.jwtData.customerId })
+                    .exec((err, customer) => {
+
+                    if( err )
+                        res.json({
+                            err: err
+                        });
+
+                    else{
+
+                        customer.workers.push(worker);
+                        customer.save(
+                            (err)=> {
+
+                                if(err)
+                                    res.json();
+
+                                else {
+
+                                    let mailOptions = {
+                                        from: 'test@thetechnolover.com',
+                                        to: req.body.email,
+                                        subject: 'test ',
+                                        text: "You have successfully added",
+                                        html: "You have successfully added"
+                                    };
+                                            
+                                    transporter.sendMail(mailOptions, (err, info) => {
+
+                                        if(err)
+                                            res.json({err: err});
+                                        else
+                                            res.json(supervisor);
+                                    });  
+
+                                }
+                            }); 
+
+                    }
+                                    
+                    });                  
+                
+            }
+
+        });        
+            
+    });
+
+
 
 
 

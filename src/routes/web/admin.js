@@ -1,13 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+
+
+/**
+ * JWT Token
+ */
 const jwt = require('jsonwebtoken');
 const jwtKey = require('../../../config/jwt');
+const checkAuth = require('../../services/check-auth');
 
-let transporter = require("../../services/smtp-server");
 
+/**
+ * Mongoose Models
+ */
 let AdminModel = require("../../models/Admin");
 let CustomerModel = require("../../models/Customer");
+
+
+/**
+ * Email and SMS Service
+ */
+let transporter = require("../../services/smtp-server");
+
 
 
 router.post('/auth', (req, res) => {
@@ -136,7 +151,6 @@ router.post('/register', (req, res) => {
 
                     }
                 });
-
 
         }
 

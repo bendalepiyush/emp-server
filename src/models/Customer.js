@@ -58,7 +58,7 @@ const workerSchema =
             default: 100
         },
 
-        attendaceLog: [attendaceLogSchema]
+        attendaceLogs: [attendaceLogSchema]
 
     },
     {
