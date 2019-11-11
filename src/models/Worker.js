@@ -64,4 +64,4 @@ const workerSchema =
 
 
 mongoose.model('attendaceLogSchema', attendaceLogSchema);
-moduler.exports = mongoose.model('Worker', workerSchema);
+module.exports = mongoose.model('Worker', workerSchema);

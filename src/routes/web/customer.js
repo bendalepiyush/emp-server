@@ -16,7 +16,7 @@ const checkAuth = require('../../services/check-auth');
  */
 let CustomerModel = require("../../models/Customer");
 let SupervisorModel = require("../../models/Supervisor");
-
+let WorkersModel = require("../../models/Worker");
 
 /**
  * Email and SMS Service
@@ -108,30 +108,29 @@ router.post('/admins', checkAuth, (req, res) => {
     if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
 
         CustomerModel
-        .findOne({ customerId : req.jwtData.customerId })
-        .exec( (err, customer) => {
+            .findOne({ customerId : req.jwtData.customerId })
+            .exec( (err, customer) => {
 
-            if (err)
-                res.json({
-                    err: err
-                });
+                if (err)
+                    res.json({
+                        err: err
+                    });
 
-            else if(customer === null) 
-                res.json({
-                    err: "Something went wrong"
-                });
-            
-            else {
-                res.json(customer.companyAdmins);
-            }
-        });
+                else if(customer === null) 
+                    res.json({
+                        err: "Something went wrong"
+                    });
+                
+                else {
+                    res.json(customer.companyAdmins);
+                }
+            });
 
-    } else {
+    } else 
         res.status(403).json({
             message: 'Forbidden',
             status: 403
         });
-    }
     
 });
 
@@ -145,23 +144,23 @@ router.post('/supervisors', checkAuth, (req, res) => {
     if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
 
         SupervisorModel
-        .find({ profileId : { $gt : limit.low, $lt : limit.high } })
-        .exec( (err, supervisors) => {
+            .find({ profileId : { $gt : limit.low, $lt : limit.high } })
+            .exec( (err, supervisors) => {
 
-            if (err)
-                res.json({
-                    err: err
-                });
+                if (err)
+                    res.json({
+                        err: err
+                    });
 
-            else if(supervisors === null) 
-                res.json({
-                    err: "Something went wrong"
-                });
-            
-            else {
-                res.json(supervisors);
-            }
-        });
+                else if(supervisors === null) 
+                    res.json({
+                        err: "Something went wrong"
+                    });
+                
+                else {
+                    res.json(supervisors);
+                }
+            });
 
     } else
 
@@ -177,23 +176,23 @@ router.post('/workers', checkAuth, (req, res) => {
     if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
 
         CustomerModel
-        .findOne({ customerId : req.jwtData.customerId })
-        .exec( (err, customer) => {
+            .findOne({ customerId : req.jwtData.customerId })
+            .exec( (err, customer) => {
 
-            if (err)
-                res.json({
-                    err: err
-                });
+                if (err)
+                    res.json({
+                        err: err
+                    });
 
-            else if(customer === null) 
-                res.json({
-                    err: "Something went wrong"
-                });
-            
-            else {
-                res.json(customer.workers);
-            }
-        });
+                else if(customer === null) 
+                    res.json({
+                        err: "Something went wrong"
+                    });
+                
+                else {
+                    res.json(customer.workers);
+                }
+            });
 
     } else {
         res.status(403).json({
