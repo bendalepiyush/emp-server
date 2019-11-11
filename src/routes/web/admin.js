@@ -21,7 +21,7 @@ let CustomerModel = require("../../models/Customer");
 /**
  * Email and SMS Service
  */
-let transporter = require("../../services/smtp-server");
+let transporter = require("../../services/email-transporter");
 
 
 
@@ -125,23 +125,17 @@ router.post('/register', (req, res) => {
                                 if (err)
                                     res.json(err);
                                 
-                                let mailOptions = {
-                                    from: 'test@thetechnolover.com',
-                                    to: req.body.email,
-                                    subject: 'Test',
-                                    text: password,
-                                    html: password
-                                };
-                
-                                transporter.sendMail(mailOptions, function(error, info){
+                                else {
 
-                                    if(error)
-                                        res.json({err: err});
-                                    else
-                                        res.json(admin);
-                                
-                                });               
-                                
+                                    let mailOptions = {
+                                        to: req.body.email,
+                                        subject: 'test',
+                                        msg: password
+                                    };
+                                        
+                                    sendMail(mailOptions);
+
+                                }           
                 
                             });
                 
@@ -191,7 +185,7 @@ router.post('/addCustomer', checkAuth, (req, res) => {
                         else {  
                     
                             let ownerFullName = req.body.ownerFirstname + ' ' + req.body.ownerLastname;
-                    
+                            let profileId = customerId * 10000 + 1;
                             let customer = new CustomerModel({
                                 companyName : req.body.companyName,
                                 email: req.body.email,
@@ -199,7 +193,7 @@ router.post('/addCustomer', checkAuth, (req, res) => {
                                 ratePerWorkerPerMonth: req.body.ratePerWorkerPerMonth,
                                 customerId: customerId,
                                 companyAdmins: [{
-                                    profileId : customerId * 10000 + 1,
+                                    profileId : profileId,
                                     email : req.body.ownerEmail,
                                     fullName : ownerFullName,
                                     mobileNo : req.body.ownerMobileNo,
@@ -214,21 +208,15 @@ router.post('/addCustomer', checkAuth, (req, res) => {
                                     });
                                     
                                 else {
+
                                     let mailOptions = {
-                                        from: 'test@thetechnolover.com',
                                         to: req.body.ownerEmail,
-                                        subject: 'test ',
-                                        text: password,
-                                        html: password
+                                        subject: 'test',
+                                        msg: "Profile ID - " + profileId + "\n" + password
                                     };
                                         
-                                    transporter.sendMail(mailOptions, function(err, info){
-                                        if(err)
-                                            res.json({err: err});
-                                        else
-                                            res.json(customer);
-                                        
-                                    });
+                                    sendMail(mailOptions);
+
                                 }
                             });
                     

@@ -21,7 +21,7 @@ let WorkersModel = require("../../models/Worker");
 /**
  * Email and SMS Service
  */
-let transporter = require("../../services/smtp-server");
+let transporter = require("../../services/email-transporter");
 
 
 router.post('/admin/auth', (req, res) =>{
@@ -173,24 +173,29 @@ router.post('/supervisors', checkAuth, (req, res) => {
 
 router.post('/workers', checkAuth, (req, res) => {
 
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000; 
+
     if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
 
-        CustomerModel
-            .findOne({ customerId : req.jwtData.customerId })
-            .exec( (err, customer) => {
+        WorkersModel
+            .find({ profileId : { $gt : limit.low, $lt : limit.high } })
+            .exec( (err, workers) => {
 
                 if (err)
                     res.json({
                         err: err
                     });
 
-                else if(customer === null) 
+                else if(workers === null) 
                     res.json({
                         err: "Something went wrong"
                     });
                 
                 else {
-                    res.json(customer.workers);
+                    res.json(workers);
                 }
             });
 
@@ -207,6 +212,12 @@ router.post('/workers', checkAuth, (req, res) => {
 
 router.post('/supervisor/register', checkAuth, (req, res) => {
 
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000; 
+    
+
     let password = Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2, 5);
 
     bcrypt.hash(password, 10, (err, hashedPassword) => {
@@ -216,91 +227,60 @@ router.post('/supervisor/register', checkAuth, (req, res) => {
 
         else {  
 
-            CustomerModel
-            .findOne({ customerId : req.jwtData.customerId })
-            .exec( (err, customer) => {
+            SupervisorModel
+                .findOne({ profileId : { $gt : limit.low, $lt : limit.high } })
+                .sort('-profileId')
+                .exec( (err, supervisor) => {
 
-                if (err)
-                    res.json({
-                        err: err
-                    });
-
-                else if(customer === null) 
-                    res.json({
-                        err: "Something went wrong"
-                    });
-                
-                else {
-
-                    let profileId;
-                    // Calculate Profile ID
-                    if(customer.supervisors.length === 0)
-                        profileId = (req.jwtData.customerId * 10000) + 1;
-                             
-                    else
-                        profileId = customer.supervisors[customer.supervisors.length - 1].profileId + 1;
-                        
-                        
-                    // Save new supervisor
-                    let fullName = req.body.firstname + ' ' + req.body.lastname;
-
-                    let supervisor = {
-                        profileId: profileId,
-                        email : req.body.email,
-                        fullName : fullName,
-                        mobileNo : req.body.mobileNo,
-                        password : hashedPassword
-                    };
-
-                    CustomerModel
-                        .findOne({ customerId : req.jwtData.customerId })
-                        .exec((err, customer) => {
-
-                                if( err )
-                                    res.json({
-                                        err: err
-                                    });
-
-                                else{
-
-                                    customer.supervisors.push(supervisor);
-                                    customer.save((err)=> {
-                                        if(err)
-                                            res.json();
-
-                                        else{
-
-                                            let mailOptions = {
-                                                from: 'test@thetechnolover.com',
-                                                to: req.body.email,
-                                                subject: 'test ',
-                                                text: "Profile ID - " + profileId + "\n" + password,
-                                                html: password
-                                            };
-                                            
-                                            transporter.sendMail(mailOptions, (err, info) => {
-
-                                                if(err)
-                                                    res.json({err: err});
-                                                else
-                                                    res.json(supervisor);
-
-                                            
-                                            });  
-
-                                        }
-
-                                    }); 
-
-                                }
-                                    
-                            }
-                        );                  
-                
+                    if (err)
+                        res.json({
+                            err: err
+                        });
                     
-                }
+                    else {
 
-            });        
+                        let profileId;
+                        // Calculate Profile ID
+                        if(supervisor === null)
+                            profileId = (req.jwtData.customerId * 10000) + 1;
+                                
+                        else
+                            profileId = supervisor.profileId + 1;
+                            
+                            
+                        // Save new supervisor
+                        let fullName = req.body.firstname + ' ' + req.body.lastname;
+
+                        let newSupervisor = new SupervisorModel({
+                            profileId: profileId,
+                            email : req.body.email,
+                            fullName : fullName,
+                            mobileNo : req.body.mobileNo,
+                            password : hashedPassword
+                        });
+
+                        newSupervisor.save((err)=> {
+                            if(err)
+                                res.json();
+
+                            else{
+                                
+                                let mailOptions = {
+                                    to: req.body.email,
+                                    subject: 'test',
+                                    msg: "Profile ID - " + profileId + "\n" + password
+                                };
+                                    
+                                sendMail(mailOptions);
+
+                            }
+
+                        }); 
+
+                        
+                    }
+
+                });        
             
 
 
@@ -314,84 +294,62 @@ router.post('/supervisor/register', checkAuth, (req, res) => {
 
 router.post('/worker/register', checkAuth, (req, res) => {
 
-    CustomerModel
-        .findOne({ customerId : req.jwtData.customerId })
-        .exec( (err, customer) => {
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000; 
+
+    WorkersModel
+        .findOne({ profileId : { $gt : limit.low, $lt : limit.high } })
+        .sort('-profileId')
+        .exec( (err, worker) => {
 
             if (err)
                 res.json({
                     err: err
                 });
 
-            else if(customer === null) 
-                res.json({
-                    err: "Something went wrong"
-                });
-                
             else {
 
                 let profileId;
 
                 // Calculate Profile ID
-                if(customer.supervisors.length === 0)
+                if(worker === null)
                     profileId = (req.jwtData.customerId * 10000) + 1;
                              
                 else
-                    profileId = customer.workers[customer.workers.length - 1].profileId + 1;
+                    profileId = worker.profileId + 1;
                 
                     
-                // Save new supervisor
+                // Save new worker
                 let fullName = req.body.firstname + ' ' + req.body.lastname;
 
-                let worker = {
+                let newWorker = new WorkersModel({
                     profileId: profileId,
                     email : req.body.email,
                     fullName : fullName,
                     mobileNo : req.body.mobileNo
-                };
+                });
 
-                CustomerModel
-                    .findOne({ customerId : req.jwtData.customerId })
-                    .exec((err, customer) => {
+                newWorker.save(
+                    (err)=> {
 
-                    if( err )
-                        res.json({
-                            err: err
-                        });
+                        if(err)
+                            res.json();
 
-                    else{
+                        else {
 
-                        customer.workers.push(worker);
-                        customer.save(
-                            (err)=> {
+                            let mailOptions = {
+                                to: req.body.email,
+                                subject: 'test',
+                                msg: "You are successfully added"
+                            };
+                                
+                            sendMail(mailOptions);
 
-                                if(err)
-                                    res.json();
-
-                                else {
-
-                                    let mailOptions = {
-                                        from: 'test@thetechnolover.com',
-                                        to: req.body.email,
-                                        subject: 'test ',
-                                        text: "You have successfully added",
-                                        html: "You have successfully added"
-                                    };
-                                            
-                                    transporter.sendMail(mailOptions, (err, info) => {
-
-                                        if(err)
-                                            res.json({err: err});
-                                        else
-                                            res.json(supervisor);
-                                    });  
-
-                                }
-                            }); 
-
-                    }
-                                    
-                    });                  
+                        }
+                    }); 
+ 
                 
             }
 
