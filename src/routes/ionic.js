@@ -117,6 +117,7 @@ router.post('/markPresent', checkSupAuth, (req, res) => {
                         res.json({
                             message: "InTime already present"
                         });  
+                        
                     else {
 
                         employee.attendaceLog.push(newAttendanceLog);

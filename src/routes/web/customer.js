@@ -15,7 +15,7 @@ const checkAuth = require('../../services/check-auth');
  * Mongoose Models
  */
 let CustomerModel = require("../../models/Customer");
-
+let SupervisorModel = require("../../models/Supervisor");
 
 
 /**
@@ -25,6 +25,7 @@ let transporter = require("../../services/smtp-server");
 
 
 router.post('/admin/auth', (req, res) =>{
+
     let profileId = req.body.profileId;
     let password = req.body.password;
 
@@ -47,6 +48,7 @@ router.post('/admin/auth', (req, res) =>{
             else {
 
                 for(var i=0; i<customer.companyAdmins.length; i++){
+
                     if(customer.companyAdmins[i].profileId === profileId){
 
                         bcrypt.compare( password, customer.companyAdmins[i].password, (err, result) => {
@@ -125,7 +127,7 @@ router.post('/admins', checkAuth, (req, res) => {
         });
 
     } else {
-        res.status(401).json({
+        res.status(403).json({
             message: 'Forbidden',
             status: 403
         });
@@ -135,33 +137,38 @@ router.post('/admins', checkAuth, (req, res) => {
 
 router.post('/supervisors', checkAuth, (req, res) => {
 
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000;   
+
     if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
 
-        CustomerModel
-        .findOne({ customerId : req.jwtData.customerId })
-        .exec( (err, customer) => {
+        SupervisorModel
+        .find({ profileId : { $gt : limit.low, $lt : limit.high } })
+        .exec( (err, supervisors) => {
 
             if (err)
                 res.json({
                     err: err
                 });
 
-            else if(customer === null) 
+            else if(supervisors === null) 
                 res.json({
                     err: "Something went wrong"
                 });
             
             else {
-                res.json(customer.supervisors);
+                res.json(supervisors);
             }
         });
 
-    } else {
-        res.status(401).json({
+    } else
+
+        res.status(403).json({
             message: 'Forbidden',
             status: 403
         });
-    }
     
 });
 
@@ -189,7 +196,7 @@ router.post('/workers', checkAuth, (req, res) => {
         });
 
     } else {
-        res.status(401).json({
+        res.status(403).json({
             message: 'Forbidden',
             status: 403
         });

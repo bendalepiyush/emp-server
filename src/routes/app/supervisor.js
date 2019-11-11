@@ -83,7 +83,7 @@ router.post('/auth', (req, res) => {
                             }
         
                         });
-                        
+
                         break;
         
                     }
@@ -155,80 +155,114 @@ router.post('/markPresent', checkAuth, (req, res) => {
 
                 if( customer.workers.length > 0 ) {
                     
+                    for(let i=0; i<customer.workers.length; i++){
+
+                        if(customer.workers[i].profileId === profileId){
+
+                            if ( customer.workers[i].attendaceLog <= 0 ){
+
+                                customer.workers[i].attendaceLog.push(newAttendanceLog);
+                                customer.save();
+
+                                res.json({
+                                    message: "InTime added successfully"
+                                });
+
+                            } else {
+
+                                if ( customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].date === currentDate )
+                                    res.json({
+                                        message: "InTime already present"
+                                    });
+
+                                else {
+
+                                    customer.workers[i].attendaceLog.push(newAttendanceLog);
+                                    customer.save();
+
+                                    res.json({
+                                        message: "InTime added successfully"
+                                    });
+
+                                }
+
+                            }
+                                
+
+                            break;
+                        }
+                    }
+
                 } else 
                     res.json({
                         err: "No worker present"
                     });
-                    
-
-                if ( employee.attendaceLog.length <= 0 ) {
-                    employee.attendaceLog.push(newAttendanceLog);
-
-                    employee.save();
-                    res.json({
-                        message: "InTime added successfully"
-                    });
-                } else {
-
-                    if ( employee.attendaceLog[employee.attendaceLog.length - 1].date === currentDate )
-                        res.json({
-                            message: "InTime already present"
-                        });  
-                    else {
-
-                        employee.attendaceLog.push(newAttendanceLog);
-
-                        employee.save();
-                        res.json({
-                            message: "InTime added successfully"
-                        });
-
-                    }
-
-                }
+                                    
                 
             });
 
 
     } else {
         
-
-        EmployeeModel
+        CustomerModel
             .findOne({ customerId : req.jwtData.customerId })
-            .exec( (err, employee) => {
+            .exec( (err, customer) => {
 
-                if (err)
-                    res.json({ err : err });
+                if( customer.workers.length > 0 ) {
+                    
+                    for(let i=0; i<customer.workers.length; i++){
 
-                else if ( employee.attendaceLog.length <= 0 )
-                    res.json({ err : "InTime not present" });
+                        if(customer.workers[i].profileId === profileId){
 
-                else {
-                    if ( employee.attendaceLog[employee.attendaceLog.length - 1].date !== currentDate )
-                        res.json({ err : "InTime not present" });
+                            if ( customer.workers[i].attendaceLog <= 0 ){
 
-                    else {
+                                res.json({
+                                    message: "InTime not present"
+                                });
 
-                        if ( employee.attendaceLog[employee.attendaceLog.length - 1].outTime )
-                            res.json({
-                                err: "OutTime already present" 
-                            });
-                        
-                        else {
-                            
-                            employee.attendaceLog[employee.attendaceLog.length - 1].outTime = currentTime;
+                            } else {
 
-                            employee.save();
-                            res.json({
-                                message: "OutTime added successfully"
-                            });
+                                if ( customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].date === currentDate )
+                                    
+                                    if(customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].outTime)
+                                        res.json({
+                                            err: "OutTime already present" 
+                                        });
+                                        
+                                    else {
 
+                                        customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].outTime = currentTime;
+                                        customer.save();
+                                        
+                                        res.json({
+                                            message: "OutTime added successfully"
+                                        });
+                                        
+                                    }
+
+                                else {
+
+                                    res.json({
+                                        message: "InTime not present"
+                                    });
+
+                                }
+
+                            }
+                                
+
+                            break;
                         }
-                                                
-                    }                    
-                }
+                    }
 
+                } else 
+                    res.json({
+                        err: "No worker present"
+                    });
+                                    
+                
             });
+           
     
     }
 

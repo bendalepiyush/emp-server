@@ -160,88 +160,92 @@ router.post('/register', (req, res) => {
 
 
 
-router.post('/addCustomer', (req, res) => {
+router.post('/addCustomer', checkAuth, (req, res) => {
 
-    CustomerModel
-        .findOne()
-        .sort('-customerId')
-        .exec((err, customer) => {
-            
-            if( err )
-                res.json({ 
-                    err: err 
-                });
-            else {
-
-                if(customer === null)
-                    customerId = 1;
-                else
-                    customerId = ++customer.customerId;
-
-                let password = Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2, 5);
-
-                bcrypt.hash(password, 10, (err, hashedPassword) => {
+    if(req.jwtData.type === "Admin"){
+        CustomerModel
+            .findOne()
+            .sort('-customerId')
+            .exec((err, customer) => {
                 
-                    if(err)
-                        res.json({ 
-                            err: err 
-                        });
-                         
-                    else {  
-                
-                        let ownerFullName = req.body.ownerFirstname + ' ' + req.body.ownerLastname;
-                
-                        let customer = new CustomerModel({
-                            companyName : req.body.companyName,
-                            email: req.body.email,
-                            mobileNo: req.body.mobileNo,
-                            ratePerWorkerPerMonth: req.body.ratePerWorkerPerMonth,
-                            customerId: customerId,
-                            companyAdmins: [{
-                                profileId : customerId * 10000 + 1,
-                                email : req.body.ownerEmail,
-                                fullName : ownerFullName,
-                                mobileNo : req.body.ownerMobileNo,
-                                password : hashedPassword
-                            }]
-                        }); 
-                        
-                        console.log(customer);
-                        
-                        customer.save((err) => {
-                            if(err)
-                                res.json({ 
-                                    err: err 
-                                });
-                                
-                            else {
-                                let mailOptions = {
-                                    from: 'test@thetechnolover.com',
-                                    to: req.body.ownerEmail,
-                                    subject: 'test ',
-                                    text: password,
-                                    html: password
-                                };
+                if( err )
+                    res.json({ 
+                        err: err 
+                    });
+                else {
+
+                    if(customer === null)
+                        customerId = 1;
+                    else
+                        customerId = ++customer.customerId;
+
+                    let password = Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2, 5);
+
+                    bcrypt.hash(password, 10, (err, hashedPassword) => {
+                    
+                        if(err)
+                            res.json({ 
+                                err: err 
+                            });
+                            
+                        else {  
+                    
+                            let ownerFullName = req.body.ownerFirstname + ' ' + req.body.ownerLastname;
+                    
+                            let customer = new CustomerModel({
+                                companyName : req.body.companyName,
+                                email: req.body.email,
+                                mobileNo: req.body.mobileNo,
+                                ratePerWorkerPerMonth: req.body.ratePerWorkerPerMonth,
+                                customerId: customerId,
+                                companyAdmins: [{
+                                    profileId : customerId * 10000 + 1,
+                                    email : req.body.ownerEmail,
+                                    fullName : ownerFullName,
+                                    mobileNo : req.body.ownerMobileNo,
+                                    password : hashedPassword
+                                }]
+                            }); 
+                                                    
+                            customer.save((err) => {
+                                if(err)
+                                    res.json({ 
+                                        err: err 
+                                    });
                                     
-                                transporter.sendMail(mailOptions, function(err, info){
-                                    if(err)
-                                        res.json({err: err});
-                                    else
-                                        res.json(customer);
-                                    
-                                });
-                            }
-                        });
-                
-                    }
-                
-                });
+                                else {
+                                    let mailOptions = {
+                                        from: 'test@thetechnolover.com',
+                                        to: req.body.ownerEmail,
+                                        subject: 'test ',
+                                        text: password,
+                                        html: password
+                                    };
+                                        
+                                    transporter.sendMail(mailOptions, function(err, info){
+                                        if(err)
+                                            res.json({err: err});
+                                        else
+                                            res.json(customer);
+                                        
+                                    });
+                                }
+                            });
+                    
+                        }
+                    
+                    });
 
+                    
+                }
                 
-            }
-            
+            });
+    } else 
+        res.status(403).json({
+            message: 'Forbidden',
+            status: 403
         });
-    
+       
     
 });
 
