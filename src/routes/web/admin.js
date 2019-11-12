@@ -21,7 +21,7 @@ let CustomerModel = require("../../models/Customer");
 /**
  * Email and SMS Service
  */
-let transporter = require("../../services/email-transporter");
+let sendMail = require("../../services/email-transporter");
 
 
 

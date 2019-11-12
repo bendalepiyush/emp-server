@@ -21,7 +21,7 @@ let WorkersModel = require("../../models/Worker");
 /**
  * Email and SMS Service
  */
-let transporter = require("../../services/email-transporter");
+var sendMail = require("../../services/email-transporter");
 
 
 router.post('/admin/auth', (req, res) =>{
@@ -42,7 +42,7 @@ router.post('/admin/auth', (req, res) =>{
 
             else if(customer === null) 
                 res.json({
-                    err: "Something went wrong"
+                    err: "ID and Password combination is incorrect"
                 });
             
             else {

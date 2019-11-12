@@ -1,13 +1,17 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const attendaceLogSchema = 
+const attendanceLogSchema = 
     new Schema({
         
         date: {
-            type: Date,
+            type: String,
             required: true,
             default: new Date()
+        },
+
+        inTime: {
+            type: String
         },
 
         outTime: {
@@ -55,7 +59,7 @@ const workerSchema =
             default: 100
         },
 
-        attendaceLogs: [attendaceLogSchema]
+        attendanceLogs: [attendanceLogSchema]
 
     },
     {
@@ -63,5 +67,5 @@ const workerSchema =
     });
 
 
-mongoose.model('attendaceLogSchema', attendaceLogSchema);
+mongoose.model('attendanceLogSchema', attendanceLogSchema);
 module.exports = mongoose.model('Worker', workerSchema);

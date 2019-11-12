@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const config = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
     name: "mail.thetechnolover.com",
     host: "mail.thetechnolover.com",
     port: 587,

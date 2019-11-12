@@ -14,80 +14,73 @@ const checkAuth = require('../../services/check-auth');
 /**
  * Mongoose Models
  */
-let CustomerModel = require("../../models/Customer");
+let SupervisorModel = require("../../models/Supervisor");
+let WorkerModel = require("../../models/Worker");
+
 
 
 router.post('/auth', (req, res) => {
 
     let profileId = req.body.profileId;
     let password = req.body.password;
+    const customerId = Math.floor(profileId / 10000); 
 
-    let customerId = Math.floor(profileId / 10000); 
-
-    CustomerModel
-        .findOne({ customerId : customerId })
-        .exec( (err, customer) => {
+    SupervisorModel
+        .findOne({ profileId : profileId })
+        .exec( (err, supervisor) => {
 
             if (err)
                 res.json({
                     err: err
                 });
 
-            else if(customer.supervisors.length < 1 || customer === null) 
+            else if(supervisor === null) 
                 res.json({
-                    err: "Something went wrong"
+                    err: "ID and Password combination is incorrect"
                 });
             
             else {
 
-                for(var i=0; i<customer.supervisors.length; i++){
-                    if(customer.supervisors[i].profileId === profileId){
-                     
-                        bcrypt.compare( password, customer.supervisors[i].password, (err, result) => {
+                bcrypt.compare( password, supervisor.password, (err, result) => {
 
-                            if (err)
-                                res.json(err);
-        
-                            else {
-        
-                                if (result) {
-                                    
-                                    jwt.sign({
-                                        profileId: profileId,
-                                        type: "Supervisor",
-                                        customerId: customerId
-                                        }, 
-                                        jwtKey, 
-                                        {
-                                            expiresIn: '1h'
-                                        }, 
-                                        (err, token) => {
-                                            if (err)
-                                                res.json(err);
-                                            else {
-                                                res.json({
-                                                    token : token,
-                                                    message : 'Authentication Successful' 
-                                                });
-                                            }
+                    if (err)
+                        res.json(err);
+
+                    else {
+
+                        if (result) {
+                            
+                            jwt.sign({
+                                profileId: profileId,
+                                type: "Supervisor",
+                                customerId: customerId
+                                }, 
+                                jwtKey, 
+                                {
+                                    expiresIn: '1h'
+                                }, 
+                                (err, token) => {
+                                    if (err)
+                                        res.json(err);
+                                    else {
+                                        res.json({
+                                            token : token,
+                                            message : 'Authentication Successful' 
                                         });
-        
-                                } else {
-                                    
-                                    res.status(401).json({
-                                        message: 'Email and Password combination is incorrect'
-                                    });
-        
-                                }
-        
-                            }
-        
-                        });
+                                    }
+                                });
 
-                        break;
-        
+                        } else {
+                            
+                            res.status(401).json({
+                                message: 'ID and Password combination is incorrect'
+                            });
+
+                        }
+
                     }
-                }
+
+                });
 
             }
 
@@ -95,174 +88,176 @@ router.post('/auth', (req, res) => {
 
 });
 
+router.post('/index', checkAuth, (req, res) => {
 
-router.post('/', checkAuth, (req, res) => {
+    const todaysDate = new Date().toDateString();
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000;
 
-    let currentDateTime = new Date;
-    let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
+    WorkerModel
+        .countDocuments({ profileId : { $gt : limit.low, $lt : limit.high } })
+        .exec((err, count) => {
 
-    
-    // CustomerModel
-    //     .countDocuments()
-    //     .exec((err, count) => {
-
-    //         if(err)
-    //             res.json(err);
+            if(err)
+                res.json(err);
                 
-    //         else
+            else
 
-    //             EmployeeModel
-    //                 .countDocuments({ 'attendaceLog.date' : currentDate })
-    //                 .exec( (err, countPresent) => { 
+                WorkerModel
+                    .countDocuments({ profileId : { $gt : limit.low, $lt : limit.high }, 'attendanceLogs.date' : todaysDate })
+                    .exec( (err, countPresent) => { 
             
-    //                     if(err)
-    //                         res.json(err);
+                        if(err)
+                            res.json(err);
 
-    //                     else
-    //                         res.json({
-    //                             allPresentEmployees : countPresent,
-    //                             totalEmployees : count
-    //                         });  
+                        else
+                            res.json({
+                                allPresentworkers : countPresent,
+                                totalworkers : count
+                            });  
 
-    //                 });
-    //     });
+                    });
+        });
 
     
 });
 
+router.post('/allWorkers', checkAuth, (req, res) => {
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000;
+
+    WorkerModel
+        .find({ profileId : { $gt : limit.low, $lt : limit.high } })
+        .exec( (err, workers) => { 
+            if (err)
+                res.json(err);
+            else 
+                res.json(workers);
+        });
+});
+
+
+router.post('/allPresentWorkers', checkAuth, (req, res) => {
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000;
+    const todaysDate =  new Date().toDateString();
+    WorkerModel
+        .find({ profileId : { $gt : limit.low, $lt : limit.high }, 'attendanceLogs.date' : todaysDate })
+        .exec( (err, workers) => { 
+
+            if (err)
+                res.json(err);
+            else
+                if ( workers ) 
+                res.json(workers);
+
+        });
+});
 
 router.post('/markPresent', checkAuth, (req, res) => {
 
     let profileId = req.body.profileId;
     let type = req.body.type;
-    let currentDateTime = new Date;
-    let currentDate =  currentDateTime.getDate() + '/' + (currentDateTime.getMonth()+1) + '/' + currentDateTime.getFullYear();
-    let currentTime = currentDateTime.getHours() + ':' + currentDateTime.getMinutes();
+    const todaysDate =  new Date().toDateString();
+    const currentTime = new Date().toTimeString();
 
     
     if( type === 'in' ) {
         let newAttendanceLog = {
-            date: currentDate,
+            date: todaysDate,
             inTime: currentTime,
             outTime: null,
-            latitude: req.body.latitude,
-            longitude: req.body.longitude
+            longitude: req.body.longitude,
+            latitude: req.body.latitude
         };
 
-        CustomerModel
-            .findOne({ customerId : req.jwtData.customerId })
-            .exec( (err, customer) => {
+        WorkerModel
+            .findOne({ profileId : profileId })
+            .exec( (err, worker) => {
 
-                if( customer.workers.length > 0 ) {
-                    
-                    for(let i=0; i<customer.workers.length; i++){
-
-                        if(customer.workers[i].profileId === profileId){
-
-                            if ( customer.workers[i].attendaceLog <= 0 ){
-
-                                customer.workers[i].attendaceLog.push(newAttendanceLog);
-                                customer.save();
-
-                                res.json({
-                                    message: "InTime added successfully"
-                                });
-
-                            } else {
-
-                                if ( customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].date === currentDate )
-                                    res.json({
-                                        message: "InTime already present"
-                                    });
-
-                                else {
-
-                                    customer.workers[i].attendaceLog.push(newAttendanceLog);
-                                    customer.save();
-
-                                    res.json({
-                                        message: "InTime added successfully"
-                                    });
-
-                                }
-
-                            }
-                                
-
-                            break;
-                        }
-                    }
-
-                } else 
+                if(err) 
                     res.json({
-                        err: "No worker present"
+                        err: err
                     });
-                                    
                 
+                else {
+
+                    if ( worker.attendanceLogs.length <= 0 ) {
+
+                        worker.attendanceLogs.push(newAttendanceLog);
+                        worker.save();
+                        res.json({
+                            message: "InTime added successfully"
+                        });
+
+                    } else {
+
+                        if ( worker.attendanceLogs[worker.attendanceLogs.length - 1].date === todaysDate )
+                            res.json({
+                                message: "InTime already present"
+                            });  
+                            
+                        else {
+
+                            worker.attendanceLogs.push(newAttendanceLog);
+
+                            worker.save();
+                            res.json({
+                                message: "InTime added successfully"
+                            });
+
+                        }
+
+                    }
+                }
             });
 
 
     } else {
         
-        CustomerModel
-            .findOne({ customerId : req.jwtData.customerId })
-            .exec( (err, customer) => {
 
-                if( customer.workers.length > 0 ) {
-                    
-                    for(let i=0; i<customer.workers.length; i++){
+        WorkerModel
+            .findOne({ profileId : profileId })
+            .exec( (err, worker) => {
 
-                        if(customer.workers[i].profileId === profileId){
+                if (err)
+                    res.json({ err : err });
 
-                            if ( customer.workers[i].attendaceLog <= 0 ){
+                else if ( worker.attendanceLogs.length <= 0 )
+                    res.json({ err : "InTime not present" });
 
-                                res.json({
-                                    message: "InTime not present"
-                                });
+                else {
+                    if ( worker.attendanceLogs[worker.attendanceLogs.length - 1].date !== todaysDate )
+                        res.json({ err : "InTime not present" });
 
-                            } else {
+                    else {
 
-                                if ( customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].date === currentDate )
-                                    
-                                    if(customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].outTime)
-                                        res.json({
-                                            err: "OutTime already present" 
-                                        });
-                                        
-                                    else {
+                        if ( worker.attendanceLogs[worker.attendanceLogs.length - 1].outTime )
+                            res.json({
+                                err: "OutTime already present" 
+                            });
+                        
+                        else {
+                            
+                            worker.attendanceLogs[worker.attendanceLogs.length - 1].outTime = currentTime;
 
-                                        customer.workers[i].attendaceLog[customer.workers[i].attendaceLog.length - 1].outTime = currentTime;
-                                        customer.save();
-                                        
-                                        res.json({
-                                            message: "OutTime added successfully"
-                                        });
-                                        
-                                    }
+                            worker.save();
+                            res.json({
+                                message: "OutTime added successfully"
+                            });
 
-                                else {
-
-                                    res.json({
-                                        message: "InTime not present"
-                                    });
-
-                                }
-
-                            }
-                                
-
-                            break;
                         }
-                    }
+                                                
+                    }                    
+                }
 
-                } else 
-                    res.json({
-                        err: "No worker present"
-                    });
-                                    
-                
             });
-           
     
     }
 
