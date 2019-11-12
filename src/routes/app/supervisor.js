@@ -131,7 +131,7 @@ router.post('/allWorkers', checkAuth, (req, res) => {
     limit.high = limit.low + 10000;
 
     WorkerModel
-        .find({ profileId : { $gt : limit.low, $lt : limit.high } })
+        .find({ profileId : { $gt : limit.low, $lt : limit.high } }, { fullName: 1, profileId: 1, _id: 0 })
         .exec( (err, workers) => { 
             if (err)
                 res.json(err);
@@ -148,7 +148,7 @@ router.post('/allPresentWorkers', checkAuth, (req, res) => {
     limit.high = limit.low + 10000;
     const todaysDate =  new Date().toDateString();
     WorkerModel
-        .find({ profileId : { $gt : limit.low, $lt : limit.high }, 'attendanceLogs.date' : todaysDate })
+        .find({ profileId : { $gt : limit.low, $lt : limit.high }, 'attendanceLogs.date' : todaysDate }, { fullName: 1, profileId: 1, _id: 0 })
         .exec( (err, workers) => { 
 
             if (err)
