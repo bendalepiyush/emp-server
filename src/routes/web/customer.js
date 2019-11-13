@@ -74,6 +74,8 @@ router.post('/admin/auth', (req, res) =>{
                                                 res.json(err);
                                             else {
                                                 res.json({
+                                                    email: admin.email,
+                                                    fullName: admin.fullName,
                                                     token : token,
                                                     message : 'Authentication Successful' 
                                                 });
