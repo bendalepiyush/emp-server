@@ -29,23 +29,38 @@ router.post('/admin/auth', (req, res) =>{
     let profileId = req.body.profileId;
     let password = req.body.password;
 
+    console.log({profileId: profileId, password: password});
+
     let customerId = Math.floor(profileId / 10000); 
+
+    const startTime = new Date().getTime();
 
     CustomerModel
         .findOne({ customerId : customerId })
         .exec( (err, customer) => {
 
-            if (err)
+            const endTime = new Date().getTime();
+
+            console.log("Time taken: ", endTime-startTime);
+
+            if (err){
                 res.json({
                     err: err
                 });
 
-            else if(customer === null) 
+                console.log(err);
+
+            }else if(customer === null){
                 res.json({
                     err: "ID and Password combination is incorrect"
                 });
+
+                console.log("Customer null");
+                
             
-            else {
+            }else {
+                
+                console.log(customer.companyAdmins);
 
                 for(var i=0; i<customer.companyAdmins.length; i++){
 
@@ -53,13 +68,17 @@ router.post('/admin/auth', (req, res) =>{
 
                         bcrypt.compare( password, customer.companyAdmins[i].password, (err, result) => {
 
-                            if (err)
+                            if (err){
                                 res.json(err);
+                                console.log(err);
+                            }else {
         
-                            else {
-        
+                                console.log("Result", result);
+
                                 if (result) {
                                     
+                                    console.log(profileId, customerId);
+
                                     jwt.sign({
                                         profileId: profileId,
                                         type: "CustomerAdmin",
@@ -70,9 +89,13 @@ router.post('/admin/auth', (req, res) =>{
                                             expiresIn: '1h'
                                         }, 
                                         (err, token) => {
-                                            if (err)
+                                            if (err){
+                                                console.log(err);
                                                 res.json(err);
-                                            else {
+
+                                            }else {
+                                            
+                                                console.log(admin.email, admin.fullName, token);
                                                 res.json({
                                                     email: admin.email,
                                                     fullName: admin.fullName,
