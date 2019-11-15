@@ -148,7 +148,7 @@ router.post('/allPresentWorkers', checkAuth, (req, res) => {
     limit.high = limit.low + 10000;
     const todaysDate =  new Date().toDateString();
     WorkerModel
-        .find({ profileId : { $gt : limit.low, $lt : limit.high }, 'attendanceLogs.date' : todaysDate }, { fullName: 1, profileId: 1, _id: 0 })
+        .find({ profileId : { $gt : limit.low, $lt : limit.high }, 'attendanceLogs.date' : todaysDate })
         .exec( (err, workers) => { 
 
             if (err)
