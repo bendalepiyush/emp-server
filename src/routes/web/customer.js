@@ -25,6 +25,12 @@ let WorkersModel = require("../../models/Worker");
 var sendMail = require("../../services/email-transporter");
 
 
+router.post('/admin/signInWithToken', checkAuth, (req, res) => {
+    res.json({
+        auth: true     
+    });
+});
+
 router.post('/admin/auth', (req, res) =>{
 
     let profileId = req.body.profileId;
