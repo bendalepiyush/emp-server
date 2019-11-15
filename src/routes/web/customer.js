@@ -18,6 +18,7 @@ let CustomerModel = require("../../models/Customer");
 let SupervisorModel = require("../../models/Supervisor");
 let WorkersModel = require("../../models/Worker");
 
+
 /**
  * Email and SMS Service
  */
@@ -29,81 +30,66 @@ router.post('/admin/auth', (req, res) =>{
     let profileId = req.body.profileId;
     let password = req.body.password;
 
-    console.log({profileId: profileId, password: password});
-
     let customerId = Math.floor(profileId / 10000); 
-
-    const startTime = new Date().getTime();
 
     CustomerModel
         .findOne({ customerId : customerId })
         .exec( (err, customer) => {
-
-            const endTime = new Date().getTime();
-
-            console.log("Time taken: ", endTime-startTime);
 
             if (err){
                 res.json({
                     err: err
                 });
 
-                console.log(err);
-
             }else if(customer === null){
                 res.json({
                     err: "ID and Password combination is incorrect"
                 });
-
-                console.log("Customer null");
                 
             
             }else {
                 
-                console.log(customer.companyAdmins);
-
                 for(var i=0; i<customer.companyAdmins.length; i++){
 
                     if(customer.companyAdmins[i].profileId === profileId){
-
                         bcrypt.compare( password, customer.companyAdmins[i].password, (err, result) => {
 
                             if (err){
                                 res.json(err);
-                                console.log(err);
-                            }else {
-        
-                                console.log("Result", result);
+
+                            }else {        
 
                                 if (result) {
-                                    
-                                    console.log(profileId, customerId);
 
-                                    jwt.sign({
-                                        profileId: profileId,
-                                        type: "CustomerAdmin",
-                                        customerId: customerId
-                                        }, 
-                                        jwtKey, 
-                                        {
-                                            expiresIn: '1h'
-                                        }, 
-                                        (err, token) => {
-                                            if (err){
-                                                console.log(err);
-                                                res.json(err);
+                                    try {
+                                        jwt.sign({
+                                            profileId: profileId,
+                                            type: "CustomerAdmin",
+                                            customerId: customerId
+                                            }, 
+                                            jwtKey, 
+                                            {
+                                                expiresIn: '1h'
+                                            }, 
+                                            (err, token) => {
 
-                                            }else {
-                                            
-                                                console.log(admin.email, admin.fullName, token);
-                                                res.json({
-                                                    email: admin.email,
-                                                    fullName: admin.fullName,
-                                                    token : token,
-                                                    message : 'Authentication Successful' 
-                                                });
-                                            }
-                                        });
+                                                if (err){
+                                                    res.json(err);
+    
+                                                }else {
+                                                    res.json({
+                                                        email: customer.companyAdmins[i].email,
+                                                        fullName: customer.companyAdmins[i].fullName,
+                                                        token : token,
+                                                        message : 'Authentication Successful' 
+                                                    });
+                                                }
+                                                
+                                            });
+
+                                    } catch(err){
+                                        res.json(err);
+                                    }
         
                                 } else {
                                     

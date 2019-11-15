@@ -4,7 +4,6 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-const cors = require('cors');
 
 /**  
  * MongoDB Connection
@@ -15,12 +14,20 @@ mongoose();
 
 const app = express();
 
-app.use(cors());
+
 app.use(function(req, res, next){
     res.header("Access-Control-Allow-Origin", "*");
-    res.header('Access-Control-Allow-Methods', 'DELETE, PUT, GET, POST');
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
+    res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS, PATCH');
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Content-Length");
+
+    if ('OPTIONS' === req.method){
+        res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, PATCH');
+        return res.status(204).json({});
+
+    }
+    else
+        next();
+
 });
 
 app.use(morgan('dev'));
