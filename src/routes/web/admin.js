@@ -219,6 +219,10 @@ router.post('/addCustomer', checkAuth, (req, res) => {
                                         
                                     sendMail(mailOptions);
 
+                                    res.json({ 
+                                        msg: "Please check your inbox" 
+                                    });
+
                                 }
                             });
                     

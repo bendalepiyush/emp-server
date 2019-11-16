@@ -30,10 +30,8 @@ module.exports = (options) => {
 			res.json({err: err});
 
 		else
-			res.json({
-				msg: "Please check your inbox",
-				info: info
-			});
+			
+		console.log(info);
 		
 	});
 

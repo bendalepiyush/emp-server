@@ -290,6 +290,9 @@ router.post('/supervisor/register', checkAuth, (req, res) => {
                                     
                                 sendMail(mailOptions);
 
+                                res.json({
+                                    msg: "Please check your inbox"
+                                });
                             }
 
                         }); 
@@ -363,6 +366,11 @@ router.post('/worker/register', checkAuth, (req, res) => {
                             };
                                 
                             sendMail(mailOptions);
+
+                            res.json({
+                                profileId: profileId,
+                                customerId: customerId
+                            });
 
                         }
                     }); 
