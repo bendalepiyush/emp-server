@@ -46,10 +46,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 const adminWebRouter = require('./src/routes/web/admin');
 const customerWebRouter = require('./src/routes/web/customer');
 const supervisorAppRouter = require('./src/routes/app/supervisor');
+const test = require('./src/routes/test');
 
 app.use('/admin', adminWebRouter);
 app.use('/customer', customerWebRouter);
 app.use('/customer/supervisor', supervisorAppRouter);
-
+app.use('/test', test);
 
 module.exports = app;
