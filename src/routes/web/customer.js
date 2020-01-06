@@ -120,9 +120,42 @@ router.post('/admin/auth', (req, res) =>{
 
 });
 
+
+router.post('/monthlyStatus', checkAuth, (req, res) => {
+
+    const customerId = req.jwtData.customerId;
+    let limit = {};
+    limit.low = customerId * 10000;
+    limit.high = limit.low + 10000; 
+
+    if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin") ) {
+
+        WorkersModel
+            .find({ profileId : { $gt : limit.low, $lt : limit.high } }, { fullName: 1, attendanceLogs: 1, stipendPerDay: 1 })
+            .exec( (err, supervisors) => {
+
+                if (err)
+                    res.json({
+                        err: err
+                    });
+
+                else if(supervisors === null) 
+                    res.json({
+                        err: "Something went wrong"
+                    });
+                
+                else {
+                    res.json(supervisors);
+                }
+            });
+
+   }
+
+});
+
 router.post('/admins', checkAuth, (req, res) => {
 
-    if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin")){
+    if( (req.jwtData.type === "CustomerAdmin") || (req.jwtData.type === "Admin") ) {
 
         CustomerModel
             .findOne({ customerId : req.jwtData.customerId })
